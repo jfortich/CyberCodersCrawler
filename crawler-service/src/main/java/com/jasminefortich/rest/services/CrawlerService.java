@@ -109,6 +109,10 @@ public class CrawlerService {
 
     }
 
+    /**
+     * Crawls a site and queues any child links to the crawler service
+     * @param link The link to crawl
+     */
     @Async
     public void crawlSite(String link) {
         try {
@@ -141,8 +145,8 @@ public class CrawlerService {
     }
 
     /**
-     *
-     * @param link
+     * Adds a link to the queue
+     * @param link The link to queue
      */
     private synchronized void enqueueLink(String link) {
         if (!VISITED_LINKS.contains(link)) {
@@ -151,8 +155,8 @@ public class CrawlerService {
     }
 
     /**
-     *
-     * @param link
+     * Adds a link to the visited list
+     * @param link The link to add
      */
     private synchronized void addVisitedLink(String link) {
         VISITED_LINKS.add(link);
@@ -193,52 +197,5 @@ public class CrawlerService {
         LOGGER.info("Success count : " + SUCCESS_COUNT);
         LOGGER.info("Failed count  : " + FAILED_COUNT);
     }
-
-    /**
-     *
-     */
-//    private class CrawlerThread extends Thread {
-//
-//        private String link;
-//
-//        public CrawlerThread() { super(); }
-//
-//        public CrawlerThread(String link) {
-//            this.link = link;
-//        }
-//
-//        @Override
-//        public void run() {
-//            try {
-//                LOGGER.info("Crawling " + link);
-//
-//                Connection connection = Jsoup.connect(link);
-//
-//                Connection.Response siteResponse = connection.execute();
-//
-//                int responseCode = siteResponse.statusCode();
-//                if (isSuccessfulRequest(responseCode)) {
-//                    logSuccessfulResponse();
-//
-//                    Document site = connection.get();
-//
-//                    Elements siteLinkTags = site.select("a[href]");
-//                    siteLinkTags.forEach(element -> {
-//                        String siteLink = element.absUrl("href");
-//                        enqueueLink(siteLink);
-//                    });
-//                } else {
-//                    logFailedResponse();
-//                }
-//
-//            } catch (IOException e) {
-//                logFailedResponse();
-//            }
-//
-//            addVisitedLink(link);
-//
-//            CRAWLER_THREADS.remove(this);
-//        }
-//    }
 
 }

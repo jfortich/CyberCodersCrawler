@@ -75,7 +75,7 @@ public class CrawlerService {
         } catch (MalformedURLException e) {
             throw new CrawlerException("Invalid starting endpoint '" + this.startEndpoint + "'");
         } catch (IOException e) {
-            throw new CrawlerException("Could not c", e);
+            throw new CrawlerException("Could not crawl starting endpoint", e);
         }
 
         if (json == null){
@@ -98,7 +98,7 @@ public class CrawlerService {
                 crawlSite(link);
                 VISITED_LINKS.add(link);
             } else {
-                LOGGER.info("Already seen " + link + ". Skipping.. ");
+                LOGGER.info("Skipping " + link + "...");
             }
 
         }

@@ -1,0 +1,11 @@
+### gradle
+.gradle/*
+/crawler-service/build/*
+/crawler-service/out/*
+
+### intellij files
+.idea/*
+
+### DS store
+/crawler-service/.DS_Store
+.DS_Store

@@ -4,6 +4,7 @@ import com.google.gson.Gson;
 import com.jasminefortich.crawler.exceptions.CrawlerException;
 import com.jasminefortich.crawler.models.StartEndpoint;
 import com.jasminefortich.crawler.utils.JsonUtil;
+import org.json.JSONException;
 import org.json.JSONObject;
 import org.jsoup.Connection;
 import org.jsoup.Jsoup;
@@ -28,10 +29,9 @@ public class CrawlerService {
 
     private volatile Set<String> VISITED_LINKS = Collections.synchronizedSet(new HashSet<>());
     private volatile Queue<String> LINK_QUEUE  = new LinkedList<>();
+    private volatile List<CrawlerThread> CRAWLER_THREADS = new ArrayList<>();
 
-    private List<CrawlerThread> CRAWLER_THREADS = new ArrayList<>();
-
-    private static Integer REQUEST_COUNT = 0, SUCCESS_COUNT = 0, FAILED_COUNT = 0;
+    private Integer REQUEST_COUNT = 0, SUCCESS_COUNT = 0, FAILED_COUNT = 0;
 
     @Autowired
     private ThreadPoolTaskExecutor threadPool;
@@ -132,17 +132,17 @@ public class CrawlerService {
             throw new CrawlerException("Invalid starting endpoint \"" + startEndpoint + "\"" , e);
         } catch (IOException e) {
             throw new CrawlerException("Could not crawl starting endpoint", e);
+        } catch (JSONException e) {
+            throw new CrawlerException("Invalid json", e);
         }
 
-        if (json == null){
-            throw new CrawlerException("Crawler endpoint is not expected structure");
-        }
+        if (json != null) {
+            Gson gson = new Gson();
+            StartEndpoint endpoint = gson.fromJson(json.toString(), StartEndpoint.class);
 
-        Gson gson = new Gson();
-        StartEndpoint endpoint = gson.fromJson(json.toString(), StartEndpoint.class);
-
-        if (startEndpoint != null) {
-            LINK_QUEUE.addAll(endpoint.getLinks());
+            if (endpoint != null) {
+                LINK_QUEUE.addAll(endpoint.getLinks());
+            }
         }
     }
 
@@ -207,6 +207,8 @@ public class CrawlerService {
      * Prints the crawl summary
      */
     private void printCrawlSummary() {
+        LOGGER.info("");
+        LOGGER.info("Summary");
         LOGGER.info("Total requests: " + REQUEST_COUNT);
         LOGGER.info("Success count : " + SUCCESS_COUNT);
         LOGGER.info("Failed count  : " + FAILED_COUNT);
@@ -249,7 +251,7 @@ public class CrawlerService {
                     logFailedResponse();
                 }
 
-            } catch (IOException e) {
+            } catch (IOException e) {   // Thrown when response is 500 or 502
                 logFailedResponse();
             }
 

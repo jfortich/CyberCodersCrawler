@@ -20,6 +20,7 @@ jar {
 
 repositories {
     mavenCentral()
+    jcenter()
 }
 
 sourceCompatibility = 1.8
@@ -27,12 +28,13 @@ targetCompatibility = 1.8
 
 dependencies {
     compile("org.springframework.boot:spring-boot-starter-web")
-    compileOnly "org.projectlombok:lombok:${lombok_version}"
     compile "com.google.code.gson:gson:${gson_version}"
     compile "org.jsoup:jsoup:${jsoup_version}"
-
-
     compile "org.json:json:${json_version}"
 
+    compileOnly "org.projectlombok:lombok:${lombok_version}"
+
     testCompile("junit:junit")
+    testCompile "org.mockito:mockito-core:${mockito_version}"
+    testCompile "com.github.tomakehurst:wiremock:${wiremock_version}"
 }

@@ -10,7 +10,6 @@ import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.select.Elements;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Service;
 
@@ -32,27 +31,42 @@ public class CrawlerService {
 
     private List<CrawlerThread> CRAWLER_THREADS = new ArrayList<>();
 
-    private Integer REQUEST_COUNT = 0, SUCCESS_COUNT = 0, FAILED_COUNT = 0;
-
-    @Value("${crawler.start-endpoint}")
-    private String startEndpoint;
+    private static Integer REQUEST_COUNT = 0, SUCCESS_COUNT = 0, FAILED_COUNT = 0;
 
     @Autowired
-    ThreadPoolTaskExecutor threadPool;
+    private ThreadPoolTaskExecutor threadPool;
 
     /**
-     * Sets the starting endpoint
+     * Getter for failed count
      *
-     * @param endpoint The new start endpoint
+     * @return The current failed count
      */
-    public void setStartEndpoint(String endpoint) {
-        this.startEndpoint = endpoint;
+    public Integer getFailedCount() {
+        return FAILED_COUNT;
+    }
+
+    /**
+     * Getter for success count
+     *
+     * @return The current success count
+     */
+    public Integer getSuccessCount() {
+        return SUCCESS_COUNT;
+    }
+
+    /**
+     * Getter for request count
+     *
+     * @return The current request count
+     */
+    public Integer getRequestCount() {
+        return REQUEST_COUNT;
     }
 
     /**
      * Resets the crawler service by clearing the 'visited' and 'to visit' lists
      */
-    public void resetCrawlerService() {
+    private void resetCrawlerService() {
         LINK_QUEUE.clear();
         VISITED_LINKS.clear();
         resetCrawlerStatistics();
@@ -72,38 +86,19 @@ public class CrawlerService {
      *
      * @throws CrawlerException Thrown if crawler endpoint is not set or the endpoint is not valid
      */
-    public void startCrawling() throws CrawlerException {
+    public void crawlEndpoint(String startEndpoint) throws CrawlerException {
         Instant start = Instant.now();
         resetCrawlerService();
 
-        LOGGER.info("Crawler started: " + this.startEndpoint);
+        LOGGER.info("Crawler started: " + startEndpoint);
 
-        if (this.startEndpoint == null || this.startEndpoint.isEmpty()) {
+        if (startEndpoint == null || startEndpoint.isEmpty()) {
             throw new CrawlerException("Crawler endpoint is not set!");
         }
 
-        JSONObject json;
-        try {
-            URL url  = new URL(this.startEndpoint);
-            json = JsonUtil.readJsonFromUrl(url);
-        } catch (MalformedURLException e) {
-            throw new CrawlerException("Invalid starting endpoint '" + this.startEndpoint + "'");
-        } catch (IOException e) {
-            throw new CrawlerException("Could not crawl starting endpoint", e);
-        }
+        queueStartEndpointLinks(startEndpoint);
 
-        if (json == null){
-            throw new CrawlerException("Crawler endpoint is not expected structure");
-        }
-
-        Gson gson = new Gson();
-        StartEndpoint startEndpoint = gson.fromJson(json.toString(), StartEndpoint.class);
-
-        if (startEndpoint != null) {
-            LINK_QUEUE.addAll(startEndpoint.getLinks());
-        }
-
-        // While there are still links to visit, let's crawl
+        // While there are still links to visit or if crawl threads are still executing, continue to poll queue
         while (LINK_QUEUE.size() > 0 || CRAWLER_THREADS.size() > 0) {
             String link = LINK_QUEUE.poll();
             if (link != null) {
@@ -121,6 +116,34 @@ public class CrawlerService {
         LOGGER.info("Finished crawling in " + Duration.between(start, end).getSeconds() + " seconds");
         printCrawlSummary();
 
+    }
+
+    /**
+     * Queues all links found on the starting endpoint
+     *
+     * @throws CrawlerException Throws a crawler exception if the starting endpoint is invalid
+     */
+    private void queueStartEndpointLinks(String startEndpoint) throws CrawlerException {
+        JSONObject json;
+        try {
+            URL url  = new URL(startEndpoint);
+            json = JsonUtil.readJsonFromUrl(url);
+        } catch (MalformedURLException e) {
+            throw new CrawlerException("Invalid starting endpoint \"" + startEndpoint + "\"" , e);
+        } catch (IOException e) {
+            throw new CrawlerException("Could not crawl starting endpoint", e);
+        }
+
+        if (json == null){
+            throw new CrawlerException("Crawler endpoint is not expected structure");
+        }
+
+        Gson gson = new Gson();
+        StartEndpoint endpoint = gson.fromJson(json.toString(), StartEndpoint.class);
+
+        if (startEndpoint != null) {
+            LINK_QUEUE.addAll(endpoint.getLinks());
+        }
     }
 
     /**

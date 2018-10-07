@@ -1,5 +1,6 @@
 package com.jasminefortich.crawler.utils;
 
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.BufferedReader;
@@ -13,13 +14,13 @@ public class JsonUtil {
 
     /**
      * Reads JSON data from the given URL
+     *
      * @param url The URL to download the json from
      * @return The JSON object
      * @throws IOException Thrown if error opening the url stream or reading the content
      */
-    public static JSONObject readJsonFromUrl(URL url) throws IOException {
-        InputStream inputStream = url.openStream();
-        try {
+    public static JSONObject readJsonFromUrl(URL url) throws IOException, JSONException {
+        try (InputStream inputStream = url.openStream()) {
             InputStreamReader inputStreamReader = new InputStreamReader(inputStream, Charset.forName("UTF-8"));
             BufferedReader bufferedReader = new BufferedReader(inputStreamReader);
 
@@ -28,17 +29,16 @@ public class JsonUtil {
                 return new JSONObject(jsonString);
             }
 
-        } finally {
-            inputStream.close();
         }
         return null;
     }
 
     /**
      * Reads string content from a buffered reader
+     *
      * @param reader The buffered reader
      * @return The entire string contents of the reader
-     * @throws IOException
+     * @throws IOException Thrown if error reading input stream
      */
     private static String readContent(BufferedReader reader) throws IOException {
         StringBuilder content = new StringBuilder();

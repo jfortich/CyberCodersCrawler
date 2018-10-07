@@ -261,4 +261,19 @@ public class CrawlerServiceTest {
         Assert.assertEquals(11, crawlerService.getSuccessCount().longValue());
         Assert.assertEquals(0, crawlerService.getFailedCount().longValue());
     }
+
+    @Test
+    public void crawlRequestsWithInvalidLink() throws CrawlerException {
+        String jsonString = "{ \"links\": [ \"someinvalidlink\" ] }";
+        createCrawlEndpoint(jsonString);
+
+        crawlerService.crawlEndpoint(MOCK_ENDPOINT);
+
+        Assert.assertEquals(1, crawlerService.getRequestCount().longValue());
+        Assert.assertEquals(0, crawlerService.getSuccessCount().longValue());
+        Assert.assertEquals(1, crawlerService.getFailedCount().longValue());
+    }
+
+
+
 }

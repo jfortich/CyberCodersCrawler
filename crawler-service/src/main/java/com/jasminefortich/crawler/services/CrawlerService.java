@@ -153,7 +153,9 @@ public class CrawlerService {
     private void crawlSite(String link) {
         CrawlerThread thread = new CrawlerThread(link);
         threadPool.execute(thread);
-        CRAWLER_THREADS.add(thread);
+        synchronized (this) {
+            CRAWLER_THREADS.add(thread);
+        }
     }
 
     /**
@@ -251,7 +253,12 @@ public class CrawlerService {
                     logFailedResponse();
                 }
 
-            } catch (IOException e) {   // Thrown when response is 500 or 502
+            } catch (IOException e) {   // Thrown when response is 400, 404, 500, or 502
+                LOGGER.warning(String.format("Failed to crawl %s", link));
+                logFailedResponse();
+
+            } catch (IllegalArgumentException e) {  // Invalid link
+                LOGGER.warning(String.format("Invalid link %s", link));
                 logFailedResponse();
             }
 

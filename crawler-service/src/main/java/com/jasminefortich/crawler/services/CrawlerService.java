@@ -153,9 +153,7 @@ public class CrawlerService {
     private void crawlSite(String link) {
         CrawlerThread thread = new CrawlerThread(link);
         threadPool.execute(thread);
-        synchronized (this) {
-            CRAWLER_THREADS.add(thread);
-        }
+        CRAWLER_THREADS.add(thread);
     }
 
     /**
@@ -264,7 +262,9 @@ public class CrawlerService {
 
             addVisitedLink(link);
 
-            CRAWLER_THREADS.remove(this);
+            synchronized (this) {
+                CRAWLER_THREADS.remove(this);
+            }
         }
     }
 

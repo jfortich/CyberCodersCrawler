@@ -1,4 +1,4 @@
-package com.jasminefortich.rest.models;
+package com.jasminefortich.crawler.models;
 
 import lombok.Data;
 

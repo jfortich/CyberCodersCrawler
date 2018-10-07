@@ -1,4 +1,4 @@
-package com.jasminefortich.rest.utils;
+package com.jasminefortich.crawler.utils;
 
 import org.json.JSONObject;
 

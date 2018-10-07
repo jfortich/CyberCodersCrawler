@@ -1,6 +1,4 @@
-package com.jasminefortich.rest.exceptions;
-
-import com.jasminefortich.rest.services.CrawlerService;
+package com.jasminefortich.crawler.exceptions;
 
 public class CrawlerException extends Exception {
 
